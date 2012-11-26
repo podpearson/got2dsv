@@ -66,49 +66,49 @@ pipeline <- function(
   return(vcfList)
 }
 
-lowpassInfo <- do.call(
-  c,
-  lapply(
-    vcfListImportantColumns,
-    function(vcf) {
-      cat(".")
-      temp <- info(vcf)
-      if("set" %in% names(values(temp))) {
-        values(temp)[["set"]] <- NULL
-      }
-      temp
-    }
-  )
-)
-lowpassFixed <- do.call(
-  c,
-  lapply(
-    vcfListImportantColumns,
-    function(vcf) {
-      cat(".")
-      fixed(vcf)
-    }
-  )
-)
-
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(GLALTFREQ==0, sapply(CalledBy, function(x) "GenomeStrip" %in% x), useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(GLALTFREQ==0, paste(ROgt0.8withBatch1, ROgt0.8withBatch2, ROgt0.8with1000G), useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(unlist(SVLEN)==0, sapply(CalledBy, function(x) "GenomeStrip" %in% x), useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(sapply(CalledBy, function(x) paste(x, collapse=":")), unlist(SVLEN)==0, useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(sapply(CalledBy, function(x) paste(x, collapse=":")), is.na(unlist(SVLEN)), useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(is.na(unlist(SVLEN)), batch, useNA="ifany"))
-with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(unlist(SVLEN)==0, paste(ROgt0.8withBatch1, ROgt0.8withBatch2, ROgt0.8with1000G), useNA="ifany"))
-table(sapply(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["SVLEN"]], length), useNA="ifany")
-
-SVLENs <- unlist(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["SVLEN"]])
-ENDs <- values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["END"]]
-POSs <- start(ranges(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]))
-LENGTHS <- POSs-ENDs
-GSELENGTHs <- values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["GSELENGTH"]]
-table(GSELENGTHs-(-LENGTHS), useNA="ifany")
-
-chr1info <- values(info(vcfList[[1]]))
-chr1filter <- filt(vcfList[[1]])
-chr1infoPASS <- chr1info[chr1filter=="PASS", ]
+#lowpassInfo <- do.call(
+#  c,
+#  lapply(
+#    vcfListImportantColumns,
+#    function(vcf) {
+#      cat(".")
+#      temp <- info(vcf)
+#      if("set" %in% names(values(temp))) {
+#        values(temp)[["set"]] <- NULL
+#      }
+#      temp
+#    }
+#  )
+#)
+#lowpassFixed <- do.call(
+#  c,
+#  lapply(
+#    vcfListImportantColumns,
+#    function(vcf) {
+#      cat(".")
+#      fixed(vcf)
+#    }
+#  )
+#)
+#
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(GLALTFREQ==0, sapply(CalledBy, function(x) "GenomeStrip" %in% x), useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(GLALTFREQ==0, paste(ROgt0.8withBatch1, ROgt0.8withBatch2, ROgt0.8with1000G), useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(unlist(SVLEN)==0, sapply(CalledBy, function(x) "GenomeStrip" %in% x), useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(sapply(CalledBy, function(x) paste(x, collapse=":")), unlist(SVLEN)==0, useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(sapply(CalledBy, function(x) paste(x, collapse=":")), is.na(unlist(SVLEN)), useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(is.na(unlist(SVLEN)), batch, useNA="ifany"))
+#with(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]), table(unlist(SVLEN)==0, paste(ROgt0.8withBatch1, ROgt0.8withBatch2, ROgt0.8with1000G), useNA="ifany"))
+#table(sapply(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["SVLEN"]], length), useNA="ifany")
+#
+#SVLENs <- unlist(values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["SVLEN"]])
+#ENDs <- values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["END"]]
+#POSs <- start(ranges(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"]))
+#LENGTHS <- POSs-ENDs
+#GSELENGTHs <- values(lowpassInfo[values(lowpassFixed)[["FILTER"]]=="PASS"])[["GSELENGTH"]]
+#table(GSELENGTHs-(-LENGTHS), useNA="ifany")
+#
+#chr1info <- values(info(vcfList[[1]]))
+#chr1filter <- filt(vcfList[[1]])
+#chr1infoPASS <- chr1info[chr1filter=="PASS", ]
 
 
