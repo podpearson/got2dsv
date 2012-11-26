@@ -9,59 +9,66 @@
 
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
-  shouldReload                = FALSE
+  shouldReload                = !file.exists(file.path(outputDir, "vcfList.rda")),
+  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf"))
 ) {
+  if(shouldReload) {
 #  vcfOmni <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Deletions.092512.vcf", outputDir=outputDir)
 #  vcfOmniRaw <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Raw.Deletions.101512_v1.vcf", outputDir=outputDir)
-  vcf1kg <- read1kgVcfToR(
-    "/ddn/projects11/got2d/GoT2DSVs/1000G_SVgenotypes/ALL.genome.phase1_release_v3.20101123.svs.sites.vcf",
-    outputDir=outputDir,
-    shouldReload=shouldReload
-  )
-  vcf1kgUsedInDiscovery <- read1kgDiscoveryVcfToR(
-    "/ddn/projects11/got2d/GoT2DSVs/1000G_SVgenotypes/ALL.wgs.merged_5_del_call_sets_bps.20101123.sv_dels.low_coverage.sites.vcf",
-    outputDir=outputDir,
-    shouldReload=shouldReload
-  )
-  regionsToExclude <- adamsRegionsToExclude("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/Omni_SVraw/Regions_to_drop_082412.txt")
-  bobHighVPS <- read.delim("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/bobHighLowVariantCountsEmail20121016/high_vps_samples.dat", as.is=TRUE)[["SAMPLE"]]
-  
-  vcfList <- sapply(
-    c(1:22),
-    function(x) {
-      loadAndAnnotateLowpassSVs(
-        x,
-        vcf1kg                      = vcf1kg,
-        vcf1kgUsedInDiscovery       = vcf1kgUsedInDiscovery,
-        regionsToExclude            = regionsToExclude,
-        bobHighVPS                  = bobHighVPS,
-        shouldReload                = TRUE
-#        shouldReload                = shouldReload
-      )
-    }
-  )
-  save(vcfList, file=file.path(outputDir, "vcfList.rda"))
-  vcfListImportantColumns <- lapply(vcfList, extraImportantInfo)
-  lapply(
-    1:22,
-    function(chromosome) {
-      cat(".")
-      writeVcf(
-        vcfListImportantColumns[[chromosome]],
-        filename = file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf", chromosome)),
-        index = TRUE
-      )
-    }
-  )
-  
-#  Some debugging stuff - remove later
-    thunderVcf <- readVcf(
-      "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation/got2d.2874.chr1.sv.thunder.vcf",
-      genome="dummy",
-      param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)
-#      param=ScanVcfParam(fixed="FILTER", info=c("AC", "AN", "END", "GCLENGTH", "GLALTFREQ", "SVLEN", "BAVGPOST", "BRSQ", "LDAF", "AVGPOST", "RSQ"), geno=c("GD"))
+    vcf1kg <- read1kgVcfToR(
+      "/ddn/projects11/got2d/GoT2DSVs/1000G_SVgenotypes/ALL.genome.phase1_release_v3.20101123.svs.sites.vcf",
+      outputDir=outputDir,
+      shouldReload=shouldReload
     )
-    end(ranges(thunderVcf)) <- values(info(thunderVcf))[["END"]]
+    vcf1kgUsedInDiscovery <- read1kgDiscoveryVcfToR(
+      "/ddn/projects11/got2d/GoT2DSVs/1000G_SVgenotypes/ALL.wgs.merged_5_del_call_sets_bps.20101123.sv_dels.low_coverage.sites.vcf",
+      outputDir=outputDir,
+      shouldReload=shouldReload
+    )
+    regionsToExclude <- adamsRegionsToExclude("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/Omni_SVraw/Regions_to_drop_082412.txt")
+    bobHighVPS <- read.delim("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/bobHighLowVariantCountsEmail20121016/high_vps_samples.dat", as.is=TRUE)[["SAMPLE"]]
+  
+    vcfList <- sapply(                                                            # this reads is data from relevant vcf files into a VCF object
+      c(1:22),                                                                    # loops x over the values 1 to 22, runs loadAndAnnotateLowpassSVs for each value of x, and creates a list object containing the 22 results
+      function(x) {
+        loadAndAnnotateLowpassSVs(
+          chromosome                  = x,
+          vcf1kg                      = vcf1kg,
+          vcf1kgUsedInDiscovery       = vcf1kgUsedInDiscovery,
+          regionsToExclude            = regionsToExclude,
+          bobHighVPS                  = bobHighVPS,
+          shouldReload                = TRUE
+  #        shouldReload                = shouldReload
+        )
+      }
+    )
+    save(vcfList, file=file.path(outputDir, "vcfList.rda"))                       # save as an R object for quicker reading in later
+  } else {
+    load(file.path(outputDir, "vcfList.rda"))
+  }
+  if(shouldCreateFilesForHyun) {
+    vcfListImportantColumns <- lapply(vcfList, extraImportantInfo)                # return a list object containing VCF objects which have only the information required by Hyun in them. Essentially calls extraImportantInfo function on each element of vcfList, and returns a new list of these
+    lapply(                                                                       # writes out to actual vcf files. These are the files I emailed Hyun about 17/11/2012. The index=TRUE ensures output files and bgzipped and tabix indexed
+      1:22,
+      function(chromosome) {
+        cat(".")
+        writeVcf(
+          vcfListImportantColumns[[chromosome]],
+          filename = file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf", chromosome)),
+          index = TRUE
+        )
+      }
+    )
+  }
+  
+##  Some debugging stuff - remove later
+#    thunderVcf <- readVcf(
+#      "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation/got2d.2874.chr1.sv.thunder.vcf",
+#      genome="dummy",
+#      param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)
+##      param=ScanVcfParam(fixed="FILTER", info=c("AC", "AN", "END", "GCLENGTH", "GLALTFREQ", "SVLEN", "BAVGPOST", "BRSQ", "LDAF", "AVGPOST", "RSQ"), geno=c("GD"))
+#    )
+#    end(ranges(thunderVcf)) <- values(info(thunderVcf))[["END"]]
 
   return(vcfList)
 }
