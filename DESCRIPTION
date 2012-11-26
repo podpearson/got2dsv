@@ -1,0 +1,12 @@
+Package: got2dsv
+Type: Package
+Title: got2dsv: Filtering and evaluating SVs called on GoT2D project
+Version: 0.0.1
+Date: 2012-11-16
+Author: Richard D. Pearson
+Maintainer: Richard Pearson <rpearson@well.ox.ac.uk>
+Depends: R (>= 2.15.0), VariantAnnotation
+LazyLoad: yes
+Description: Package to carry out filtering and evaluating of SVs called on GoT2D project
+License: LGPL
+URL: http://www.well.ox.ac.uk/~rpearson
