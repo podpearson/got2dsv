@@ -10,7 +10,7 @@
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
   shouldReload                = !file.exists(file.path(outputDir, "vcfList.rda")),
-  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf"))
+  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf.gz"))
 ) {
   if(shouldReload) {
 #  vcfOmni <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Deletions.092512.vcf", outputDir=outputDir)
@@ -28,8 +28,8 @@ pipeline <- function(
     regionsToExclude <- adamsRegionsToExclude("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/Omni_SVraw/Regions_to_drop_082412.txt")
     bobHighVPS <- read.delim("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/bobHighLowVariantCountsEmail20121016/high_vps_samples.dat", as.is=TRUE)[["SAMPLE"]]
   
-    vcfList <- sapply(                                                            # this reads is data from relevant vcf files into a VCF object
-      c(1:22),                                                                    # loops x over the values 1 to 22, runs loadAndAnnotateLowpassSVs for each value of x, and creates a list object containing the 22 results
+    vcfList <- sapply(                                                          # this reads is data from relevant vcf files into a VCF object
+      c(1:22),                                                                  # loops x over the values 1 to 22, runs loadAndAnnotateLowpassSVs for each value of x, and creates a list object containing the 22 results
       function(x) {
         loadAndAnnotateLowpassSVs(
           chromosome                  = x,
@@ -42,13 +42,16 @@ pipeline <- function(
         )
       }
     )
-    save(vcfList, file=file.path(outputDir, "vcfList.rda"))                       # save as an R object for quicker reading in later
+    save(vcfList, file=file.path(outputDir, "vcfList.rda"))                     # save as an R object for quicker reading in later
+    vcf <- combineVcfListIntoVcf(vcfList)                                       # create a single VCF object containing all chromosomes for use in subsequent analysis. Note this is very memory intensive (peaks at > 16GB) for reasons I don't understand
+    gc()                                                                        # this is garabge collection to help keep RAM usage down
+    save(vcf, file=file.path(outputDir, "vcf.rda"))                             # save as an R object for quicker reading in later
   } else {
-    load(file.path(outputDir, "vcfList.rda"))
+    load(file.path(outputDir, "vcf.rda"))
   }
   if(shouldCreateFilesForHyun) {
-    vcfListImportantColumns <- lapply(vcfList, extraImportantInfo)                # return a list object containing VCF objects which have only the information required by Hyun in them. Essentially calls extraImportantInfo function on each element of vcfList, and returns a new list of these
-    lapply(                                                                       # writes out to actual vcf files. These are the files I emailed Hyun about 17/11/2012. The index=TRUE ensures output files and bgzipped and tabix indexed
+    vcfListImportantColumns <- lapply(vcfList, extraImportantInfo)              # return a list object containing VCF objects which have only the information required by Hyun in them. Essentially calls extraImportantInfo function on each element of vcfList, and returns a new list of these
+    lapply(                                                                     # writes out to actual vcf files. These are the files I emailed Hyun about 17/11/2012. The index=TRUE ensures output files and bgzipped and tabix indexed
       1:22,
       function(chromosome) {
         cat(".")
@@ -70,7 +73,8 @@ pipeline <- function(
 #    )
 #    end(ranges(thunderVcf)) <- values(info(thunderVcf))[["END"]]
 
-  return(vcfList)
+#  return(vcfList)
+  return(vcf)
 }
 
 #lowpassInfo <- do.call(
