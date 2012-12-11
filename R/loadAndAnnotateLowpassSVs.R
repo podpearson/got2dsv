@@ -27,7 +27,8 @@ loadAndAnnotateLowpassSVs <- function(
   outputFilenameThunder       = file.path(outputDir, paste(sprintf(basename(thunderVcfFmt), chromosome), "rda", sep=".")),
   outputFilenameBatch1        = file.path(outputDir, paste(sprintf(basename(batch1Fmt), chromosome), "rda", sep=".")),
   outputFilenameBatch2        = file.path(outputDir, paste(sprintf(basename(batch2Fmt), chromosome), "rda", sep=".")),
-  shouldReload                = !file.exists(outputFilenamePostAnnotation)
+  shouldReload                = !file.exists(outputFilenamePostAnnotation),
+  shouldAnnotateWithBatchNum  = file.exists(sprintf(batch1Fmt, chromosome)) & file.exists(sprintf(batch2Fmt, chromosome))
 ) {
   if(shouldReload) {                                                            # have set this up to ensure saved R object files are used if previously created, saving a lot of time when rerunning/debugging
 #    the following commands were used to clean up previous versions of vcfs. Not needed here but kept in for reference
@@ -98,49 +99,67 @@ loadAndAnnotateLowpassSVs <- function(
 #    cat("Saving vcf\n")
 #    save(thunderVcf, file=outputFilenameThunder)
 #    
-    ############################################################################
-    # Load batch1 vcf
-    ############################################################################
-    cat("Reading batch1 vcf\n")
-    batch1vcf <- readVcf(
-      sprintf(batch1Fmt, chromosome),
-      genome="dummy",
-      param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)                # here we choose to read in only the required information from the vcf, e.g. only the END from INFO and none of the FORMAT (genotype) data
-    )
-    end(ranges(batch1vcf)) <- values(info(batch1vcf))[["END"]]                  
-    gc()
-    cat("Saving vcf\n")
-    save(batch1vcf, file=outputFilenameBatch1)
-    
-    ############################################################################
-    # Load batch2 vcf
-    ############################################################################
-    cat("Reading batch2 vcf\n")
-    batch2vcf <- readVcf(
-      sprintf(batch2Fmt, chromosome),
-      genome="dummy",
-      param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)
-    )
-    end(ranges(batch2vcf)) <- values(info(batch2vcf))[["END"]]
-    gc()
-    cat("Saving vcf\n")
-    save(batch2vcf, file=outputFilenameBatch2)
-    
-    ############################################################################
-    # Annotate vcf
-    ############################################################################
-    cat("Annotating vcf\n")
-    vcfAnnotated <- annotateSVs(                                                # this function annotates each SV by finding the SV in each of the 4 other vcf files with the highest reciprocal overlap, storing the RO in the INFO, and pulling in all the data from the INFO field for that variant from the other vcf
-      vcf,
-      list(
-#        thunder                        = thunderVcf,                           # abandoned this due to problems reading Thunder vcfs using readVcf
-        batch1                         = batch1vcf,
-        batch2                         = batch2vcf,
-        thousandGenomesPhase1          = vcf1kg,
-        thousandGenomesUsedInDiscovery = vcf1kgUsedInDiscovery
-      ),
-      annotationStages=c("reciprocalOverlaps")                                  # annotateSVs can do other sorts of annotation, but we're only interested in reciprocal overlaps here
-    )
+    if(shouldAnnotateWithBatchNum) {
+      ############################################################################
+      # Load batch1 vcf
+      ############################################################################
+      cat("Reading batch1 vcf\n")
+      batch1vcf <- readVcf(
+        sprintf(batch1Fmt, chromosome),
+        genome="dummy",
+        param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)                # here we choose to read in only the required information from the vcf, e.g. only the END from INFO and none of the FORMAT (genotype) data
+      )
+      end(ranges(batch1vcf)) <- values(info(batch1vcf))[["END"]]                  
+      gc()
+      cat("Saving vcf\n")
+      save(batch1vcf, file=outputFilenameBatch1)
+      
+      ############################################################################
+      # Load batch2 vcf
+      ############################################################################
+      cat("Reading batch2 vcf\n")
+      batch2vcf <- readVcf(
+        sprintf(batch2Fmt, chromosome),
+        genome="dummy",
+        param=ScanVcfParam(fixed="FILTER", info=c("END"), geno=NA)
+      )
+      end(ranges(batch2vcf)) <- values(info(batch2vcf))[["END"]]
+      gc()
+      cat("Saving vcf\n")
+      save(batch2vcf, file=outputFilenameBatch2)
+      
+      ############################################################################
+      # Annotate vcf
+      ############################################################################
+      cat("Annotating vcf\n")
+      vcfAnnotated <- annotateSVs(                                                # this function annotates each SV by finding the SV in each of the 4 other vcf files with the highest reciprocal overlap, storing the RO in the INFO, and pulling in all the data from the INFO field for that variant from the other vcf
+        vcf,
+        list(
+  #        thunder                        = thunderVcf,                           # abandoned this due to problems reading Thunder vcfs using readVcf
+          batch1                         = batch1vcf,
+          batch2                         = batch2vcf,
+          thousandGenomesPhase1          = vcf1kg,
+          thousandGenomesUsedInDiscovery = vcf1kgUsedInDiscovery
+        ),
+        annotationStages=c("reciprocalOverlaps")                                  # annotateSVs can do other sorts of annotation, but we're only interested in reciprocal overlaps here
+      )
+    } else {
+      ############################################################################
+      # Annotate vcf
+      ############################################################################
+      cat("Annotating vcf\n")
+      vcfAnnotated <- annotateSVs(                                                # this function annotates each SV by finding the SV in each of the 4 other vcf files with the highest reciprocal overlap, storing the RO in the INFO, and pulling in all the data from the INFO field for that variant from the other vcf
+        vcf,
+        list(
+  #        thunder                        = thunderVcf,                           # abandoned this due to problems reading Thunder vcfs using readVcf
+#          batch1                         = batch1vcf,
+#          batch2                         = batch2vcf,
+          thousandGenomesPhase1          = vcf1kg,
+          thousandGenomesUsedInDiscovery = vcf1kgUsedInDiscovery
+        ),
+        annotationStages=c("reciprocalOverlaps")                                  # annotateSVs can do other sorts of annotation, but we're only interested in reciprocal overlaps here
+      )
+    }
 
     cat("Fixing annotated vcf\n")
     info(vcfAnnotated) <- values(info(vcfAnnotated))[                           # I have found that VariantAnnotation accumulates columns with names beginning "paramRangeID" which seem to mess up things. I have no idea what these columns are or why they are needed, but these commands seem to remove the associated problems
