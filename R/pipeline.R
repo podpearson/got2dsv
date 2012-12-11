@@ -6,12 +6,15 @@
 #
 ###############################################################################
 
+# X chromosome run
+# pipeline(chromosomes="X", outputRdaFilename="vcfX.rda")
 
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
-  shouldReload                = !file.exists(file.path(outputDir, "vcf.rda")),
-  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf.gz")),
-  chromosomes                 = c(1:22)
+  outputRdaFilename           = "vcf.rda",
+  shouldReload                = !file.exists(file.path(outputDir, outputRdaFilename)),
+  chromosomes                 = c(1:22),
+  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf", chromosomes[length(chromosomes)])))
 ) {
   if(shouldReload) {
 #  vcfOmni <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Deletions.092512.vcf", outputDir=outputDir)
