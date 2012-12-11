@@ -54,8 +54,8 @@ loadAndAnnotateLowpassSVs <- function(
         "echo '##INFO=<ID=CalledBy,Number=.,Type=String,Description=\"SV callers which found this variant\">'; ",
         "echo '##INFO=<ID=SAMPLES,Number=.,Type=String,Description=\"SAMPLES\">'; ",
         "echo '##INFO=<ID=SOURCE_POS_END,Number=.,Type=String,Description=\"SOURCE_POS_END\">'; ",
-        "cat ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," | head -1000 | grep ^#CHROM; ",
-        "grep -v ^# ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," ;) > ",
+        "zcat ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," | head -1000 | grep ^#CHROM; ",
+        "zgrep -v ^# ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," ;) > ",
         sprintf(got2dVcfFmt, chromosome),
         sep=""
       )
