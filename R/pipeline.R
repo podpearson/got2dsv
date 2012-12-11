@@ -15,7 +15,7 @@ pipeline <- function(
   outputVcfRdaFilename        = "vcf.rda",
   shouldReload                = !file.exists(file.path(outputDir, outputVcfRdaFilename)),
   chromosomes                 = c(1:22),
-  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf", chromosomes[length(chromosomes)])))
+  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf.gz", chromosomes[length(chromosomes)])))
 ) {
   if(shouldReload) {
 #  vcfOmni <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Deletions.092512.vcf", outputDir=outputDir)
@@ -56,6 +56,7 @@ pipeline <- function(
     gc()                                                                        # this is garabge collection to help keep RAM usage down
     save(vcf, file=file.path(outputDir, outputVcfRdaFilename))                             # save as an R object for quicker reading in later
   } else {
+    load(file.path(outputDir, outputVcfListRdaFilename))
     load(file.path(outputDir, outputVcfRdaFilename))
   }
   if(shouldCreateFilesForHyun) {
