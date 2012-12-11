@@ -7,12 +7,13 @@
 ###############################################################################
 
 # X chromosome run
-# vcfX <- pipeline(chromosomes="X", outputRdaFilename="vcfX.rda")
+# vcfX <- pipeline(chromosomes="X", outputVcfRdaFilename="vcfX.rda", outputVcfListRdaFilename="vcfListX.rda")
 
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
-  outputRdaFilename           = "vcf.rda",
-  shouldReload                = !file.exists(file.path(outputDir, outputRdaFilename)),
+  outputVcfListRdaFilename    = "vcfList.rda",
+  outputVcfRdaFilename        = "vcf.rda",
+  shouldReload                = !file.exists(file.path(outputDir, outputVcfRdaFilename)),
   chromosomes                 = c(1:22),
   shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, sprintf("t2dgo_chr%s_stg1_merged.genotypes.fixed.annotatedForHyun.vcf", chromosomes[length(chromosomes)])))
 ) {
@@ -46,17 +47,21 @@ pipeline <- function(
         )
       }
     )
-    save(vcfList, file=file.path(outputDir, "vcfList.rda"))                     # save as an R object for quicker reading in later
-    vcf <- combineVcfListIntoVcf(vcfList)                                       # create a single VCF object containing all chromosomes for use in subsequent analysis. Note this is very memory intensive (peaks at > 16GB) for reasons I don't understand
+    save(vcfList, file=file.path(outputDir, outputVcfListRdaFilename))                     # save as an R object for quicker reading in later
+    if(length(vcfList) > 1) {
+      vcf <- combineVcfListIntoVcf(vcfList)                                       # create a single VCF object containing all chromosomes for use in subsequent analysis. Note this is very memory intensive (peaks at > 16GB) for reasons I don't understand
+    } else {
+      vcf <- vcfList[[1]]
+    }
     gc()                                                                        # this is garabge collection to help keep RAM usage down
-    save(vcf, file=file.path(outputDir, "vcf.rda"))                             # save as an R object for quicker reading in later
+    save(vcf, file=file.path(outputDir, outputVcfRdaFilename))                             # save as an R object for quicker reading in later
   } else {
-    load(file.path(outputDir, "vcf.rda"))
+    load(file.path(outputDir, outputVcfRdaFilename))
   }
   if(shouldCreateFilesForHyun) {
     vcfListImportantColumns <- lapply(vcfList, extraImportantInfo)              # return a list object containing VCF objects which have only the information required by Hyun in them. Essentially calls extraImportantInfo function on each element of vcfList, and returns a new list of these
     lapply(                                                                     # writes out to actual vcf files. These are the files I emailed Hyun about 17/11/2012. The index=TRUE ensures output files and bgzipped and tabix indexed
-      1:22,
+      chromosomes,
       function(chromosome) {
         cat(".")
         writeVcf(
