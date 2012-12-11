@@ -21,7 +21,7 @@ extraImportantInfo <- function(
     )
   } else {
     c(
-      "END", "GCLENGTH", "GLALTFREQ", "GLREFFREQ", "GSELENGTH", "SVLEN", "CalledBy",
+      "END", "GSELENGTH", "SVLEN", "CalledBy",
       "thousandGenomesPhase1_NumberOfOverlaps", "thousandGenomesPhase1_Name", "thousandGenomesPhase1_Start", "thousandGenomesPhase1_End", "thousandGenomesPhase1_Filter", "thousandGenomesPhase1_ReciprocalOverlap", "EUR_AF",
       "thousandGenomesUsedInDiscovery_NumberOfOverlaps", "thousandGenomesUsedInDiscovery_Name", "thousandGenomesUsedInDiscovery_Start", "thousandGenomesUsedInDiscovery_End", "thousandGenomesUsedInDiscovery_Filter", "thousandGenomesUsedInDiscovery_ReciprocalOverlap", "CalledBy.1",
       "isInAdamsRegions"
