@@ -9,8 +9,9 @@
 
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
-  shouldReload                = !file.exists(file.path(outputDir, "vcfList.rda")),
-  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf.gz"))
+  shouldReload                = !file.exists(file.path(outputDir, "vcf.rda")),
+  shouldCreateFilesForHyun    = !file.exists(file.path(outputDir, "t2dgo_chr22_stg1_merged.genotypes.fixed.annotatedForHyun.vcf.gz")),
+  chromosomes                 = c(1:22)
 ) {
   if(shouldReload) {
 #  vcfOmni <- readOmniVcfToR("/ddn/projects11/got2d/rpearson/SVGtypes/GoT2D.Omni.Deletions.092512.vcf", outputDir=outputDir)
@@ -29,7 +30,7 @@ pipeline <- function(
     bobHighVPS <- read.delim("/ddn/projects11/got2d/GoT2DSVs/SVGtypes/bobHighLowVariantCountsEmail20121016/high_vps_samples.dat", as.is=TRUE)[["SAMPLE"]]
   
     vcfList <- sapply(                                                          # this reads is data from relevant vcf files into a VCF object
-      c(1:22),                                                                  # loops x over the values 1 to 22, runs loadAndAnnotateLowpassSVs for each value of x, and creates a list object containing the 22 results
+      chromosomes,                                                              # loops x over the values 1 to 22, runs loadAndAnnotateLowpassSVs for each value of x, and creates a list object containing the 22 results. Alternatively, when run with chromosomes="X" will create a list object with only the result for X chromosome.
       function(x) {
         loadAndAnnotateLowpassSVs(
           chromosome                  = x,

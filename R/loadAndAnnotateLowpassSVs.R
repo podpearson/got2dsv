@@ -9,6 +9,7 @@
 
 loadAndAnnotateLowpassSVs <- function(
   chromosome                  = 20,
+  got2dVcfFmtBeforeFixing     = "/ddn/projects11/got2d/rpearson/SVGtypes/t2dgo_chr%s_stg1_merged.genotypes.vcf.gz",  # Note the %s as this is used in sprintf to combine with chromsome
   got2dVcfFmt                 = "/ddn/projects11/got2d/rpearson/SVGtypes/SVG9oct/t2dgo_chr%s_stg1_merged.genotypes.fixed.vcf",  # Note the %s as this is used in sprintf to combine with chromsome
   thunderVcfFmt               = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation/got2d.2874.chr%s.sv.thunder.vcf",  # Note the %s as this is used in sprintf to combine with chromsome
 #  thunderVcfFmt               = "/ddn/projects11/got2d/GoT2DSVs/SVGtypes/Dwnldd/INTGfinal/svonly/got2d.2874.chr%s.sv.thunder.vcf.gz",
@@ -44,6 +45,22 @@ loadAndAnnotateLowpassSVs <- function(
 #    )
 #    cat(bashCommand, "\n")
 #    system(bashCommand)
+    if(!file.exists(sprintf(got2dVcfFmt, chromosome))) {
+      cat("Adding extra info lines to vcf\n")
+      bashCommand <- paste(
+        "(zcat ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," | head -1000 | grep ^##; ",
+        "echo '##INFO=<ID=GCFRACTION,Number=1,Type=Float,Description=\"GC content fraction\">'; ",
+        "echo '##INFO=<ID=CalledBy,Number=.,Type=String,Description=\"SV callers which found this variant\">'; ",
+        "echo '##INFO=<ID=SAMPLES,Number=.,Type=String,Description=\"SAMPLES\">'; ",
+        "echo '##INFO=<ID=SOURCE_POS_END,Number=.,Type=String,Description=\"SOURCE_POS_END\">'; ",
+        "cat ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," | head -1000 | grep ^#CHROM; ",
+        "grep -v ^# ", sprintf(got2dVcfFmtBeforeFixing, chromosome)," ;) > ",
+        sprintf(got2dVcfFmt, chromosome),
+        sep=""
+      )
+      cat(bashCommand, "\n")
+      system(bashCommand)
+    }
     
     ############################################################################
     # Load low-pass vcf
