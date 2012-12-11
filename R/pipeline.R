@@ -7,7 +7,7 @@
 ###############################################################################
 
 # X chromosome run
-# pipeline(chromosomes="X", outputRdaFilename="vcfX.rda")
+# vcfX <- pipeline(chromosomes="X", outputRdaFilename="vcfX.rda")
 
 pipeline <- function(
   outputDir                   = "/ddn/projects11/got2d/rpearson/SVfilteringAndEvaluation",
